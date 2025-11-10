@@ -1,0 +1,326 @@
+<main class="min-h-screen bg-gray-50">
+  <!-- Hero Header -->
+  <section class="relative bg-gradient-to-br from-green-900 via-emerald-800 to-green-900 text-white overflow-hidden">
+    <!-- Decorative Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <pattern id="leaf-pattern-news" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M10 0 Q15 5 20 10 Q15 15 10 20 Q5 15 0 10 Q5 5 10 0" fill="currentColor"/>
+        </pattern>
+        <rect width="100" height="100" fill="url(#leaf-pattern-news)"/>
+      </svg>
+    </div>
+
+    <div class="container mx-auto px-4 py-16 md:py-20 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+          Todas las Noticias <span class="text-amber-400">Amazónicas</span>
+        </h1>
+        <p class="text-lg text-emerald-100 leading-relaxed">
+          Explora nuestra colección completa de historias sobre conservación, biodiversidad y comunidades amazónicas
+        </p>
+      </div>
+    </div>
+
+    <!-- Wave Divider -->
+    <div class="absolute bottom-0 left-0 right-0">
+      <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M0 80L60 73.3C120 66.7 240 53.3 360 46.7C480 40 600 40 720 43.3C840 46.7 960 53.3 1080 53.3C1200 53.3 1320 46.7 1380 43.3L1440 40V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="#f9fafb"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="py-8 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+        <!-- Search Bar -->
+        <div class="mb-6">
+          <label for="search-input" class="block text-sm font-semibold text-gray-700 mb-2">
+            🔍 Buscar noticias
+          </label>
+          <input
+            type="search"
+            id="search-input"
+            [value]="busqueda()"
+            (input)="buscar($event)"
+            placeholder="Buscar por título, subtítulo o contenido..."
+            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:border-emerald-500 transition-all"
+            aria-label="Campo de búsqueda de noticias"
+          />
+        </div>
+
+        <!-- Filters Row -->
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+
+          <!-- Category Filter -->
+          <div class="flex-1">
+            <label for="category-select" class="block text-sm font-semibold text-gray-700 mb-2">
+              📂 Categoría
+            </label>
+            <select
+              id="category-select"
+              [value]="categoriaSeleccionada()"
+              (change)="filtrarPorCategoria($event)"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:border-emerald-500 bg-white transition-all cursor-pointer"
+              aria-label="Filtrar por categoría"
+            >
+              <option value="todas">Todas las categorías</option>
+              @for (cat of categorias(); track cat.id) {
+                <option [value]="cat.id">{{ cat.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Sort Filter -->
+          <div class="flex-1">
+            <label for="sort-select" class="block text-sm font-semibold text-gray-700 mb-2">
+              🔄 Ordenar por
+            </label>
+            <select
+              id="sort-select"
+              [value]="ordenamiento()"
+              (change)="ordenarPor($event)"
+              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:border-emerald-500 bg-white transition-all cursor-pointer"
+              aria-label="Ordenar noticias"
+            >
+              <option value="recientes">Más recientes primero</option>
+              <option value="antiguos">Más antiguos primero</option>
+              <option value="a-z">Título A-Z</option>
+              <option value="z-a">Título Z-A</option>
+            </select>
+          </div>
+
+          <!-- Clear Filters Button -->
+          <div class="flex items-end">
+            <button
+              (click)="limpiarFiltros()"
+              class="w-full md:w-auto px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-colors focus:outline-none focus:ring-4 focus:ring-gray-300"
+              aria-label="Limpiar todos los filtros"
+            >
+              ✕ Limpiar filtros
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Counter -->
+        <div class="flex items-center justify-between border-t pt-4">
+          <p class="text-gray-600 font-medium">
+            @if (noticiasFiltradas().length === 0) {
+              <span class="text-amber-600">No se encontraron noticias</span>
+            } @else if (noticiasFiltradas().length === 1) {
+              <span class="text-emerald-700">1 noticia encontrada</span>
+            } @else {
+              <span class="text-emerald-700">{{ noticiasFiltradas().length }} noticias encontradas</span>
+            }
+          </p>
+
+          @if (noticiasFiltradas().length > 0) {
+            <p class="text-sm text-gray-500">
+              Mostrando {{ rangoResultados().inicio }}-{{ rangoResultados().fin }} de {{ rangoResultados().total }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- News Grid Section -->
+  <section class="py-12 bg-gray-50">
+    <div class="container mx-auto px-4">
+
+      @if (noticiasPaginadas().length > 0) {
+        <!-- News Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          @for (noticia of noticiasPaginadas(); track noticia.id) {
+            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2 flex flex-col">
+
+              <!-- Image -->
+              <div class="relative h-48 flex-shrink-0">
+                <img
+                  [src]="noticia.imagen[0]"
+                  [alt]="noticia.titulo"
+                  class="w-full h-full object-cover"
+                />
+                <span class="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                  {{ getNombreCategoria(noticia.categoriaId) }}
+                </span>
+              </div>
+
+              <!-- Content -->
+              <div class="p-6 flex flex-col flex-1">
+                <time [attr.datetime]="noticia.fechaCreacion.toISOString()" class="text-xs text-gray-500 mb-2">
+                  {{ noticia.fechaCreacion | date:'d \'de\' MMMM, y':'':'es' }}
+                </time>
+
+                <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  {{ noticia.titulo }}
+                </h3>
+
+                <p class="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+                  {{ noticia.subtitulo }}
+                </p>
+
+                <a
+                  href="#"
+                  class="text-green-700 hover:text-green-900 font-semibold text-sm inline-flex items-center group mt-auto"
+                  [attr.aria-label]="'Leer artículo: ' + noticia.titulo"
+                >
+                  Leer artículo
+                  <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Paginación de noticias" class="mt-12">
+          <div class="flex flex-col items-center gap-4">
+
+            <!-- Pagination Info -->
+            <p class="text-sm text-gray-600">
+              Página {{ paginaActual() }} de {{ totalPaginas() }}
+            </p>
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+
+              <!-- First Page Button -->
+              <button
+                (click)="irAPrimeraPagina()"
+                [disabled]="paginaActual() === 1"
+                [class.opacity-50]="paginaActual() === 1"
+                [class.cursor-not-allowed]="paginaActual() === 1"
+                class="px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-4 focus:ring-emerald-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+                aria-label="Ir a la primera página"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+              </button>
+
+              <!-- Previous Button -->
+              <button
+                (click)="paginaAnterior()"
+                [disabled]="paginaActual() === 1"
+                [class.opacity-50]="paginaActual() === 1"
+                [class.cursor-not-allowed]="paginaActual() === 1"
+                class="px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-4 focus:ring-emerald-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+                aria-label="Página anterior"
+              >
+                <span class="hidden sm:inline">Anterior</span>
+                <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+
+              <!-- Page Numbers -->
+              @if (numerosPagina().length > 0) {
+                <div class="flex items-center gap-2">
+                  @for (numero of numerosPagina(); track numero) {
+                    <button
+                      (click)="irAPagina(numero)"
+                      [class.bg-emerald-600]="numero === paginaActual()"
+                      [class.text-white]="numero === paginaActual()"
+                      [class.border-emerald-600]="numero === paginaActual()"
+                      [class.bg-white]="numero !== paginaActual()"
+                      [class.text-gray-700]="numero !== paginaActual()"
+                      [class.border-gray-300]="numero !== paginaActual()"
+                      [class.hover:bg-gray-50]="numero !== paginaActual()"
+                      class="w-10 h-10 rounded-lg font-semibold transition-all focus:outline-none focus:ring-4 focus:ring-emerald-200 border-2"
+                      [attr.aria-label]="'Ir a página ' + numero"
+                      [attr.aria-current]="numero === paginaActual() ? 'page' : null"
+                    >
+                      {{ numero }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Next Button -->
+              <button
+                (click)="paginaSiguiente()"
+                [disabled]="paginaActual() === totalPaginas()"
+                [class.opacity-50]="paginaActual() === totalPaginas()"
+                [class.cursor-not-allowed]="paginaActual() === totalPaginas()"
+                class="px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-4 focus:ring-emerald-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+                aria-label="Página siguiente"
+              >
+                <span class="hidden sm:inline">Siguiente</span>
+                <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+
+              <!-- Last Page Button -->
+              <button
+                (click)="irAUltimaPagina()"
+                [disabled]="paginaActual() === totalPaginas()"
+                [class.opacity-50]="paginaActual() === totalPaginas()"
+                [class.cursor-not-allowed]="paginaActual() === totalPaginas()"
+                class="px-4 py-2 rounded-lg font-medium transition-all focus:outline-none focus:ring-4 focus:ring-emerald-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+                aria-label="Ir a la última página"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+                </svg>
+              </button>
+
+            </div>
+          </div>
+        </nav>
+      } @else {
+        <!-- Empty State -->
+        <div class="text-center py-20">
+          <div class="inline-block bg-amber-100 rounded-full p-6 mb-6">
+            <svg class="w-16 h-16 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">
+            No se encontraron noticias
+          </h3>
+          <p class="text-gray-600 mb-8 max-w-md mx-auto">
+            No hay noticias que coincidan con los filtros seleccionados. Intenta ajustar tu búsqueda o limpiar los filtros.
+          </p>
+          <button
+            (click)="limpiarFiltros()"
+            class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      }
+
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-gradient-to-r from-green-800 via-emerald-700 to-green-800 text-white">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="inline-block bg-amber-400 rounded-full p-4 mb-6">
+          <svg class="w-8 h-8 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">
+          No te pierdas ninguna historia
+        </h2>
+        <p class="text-emerald-100 text-lg mb-8">
+          Suscríbete a nuestro newsletter y recibe las últimas noticias de la Amazonía directo en tu correo
+        </p>
+        <a
+          href="#"
+          class="inline-block bg-amber-500 hover:bg-amber-600 text-green-900 px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+        >
+          Suscribirme ahora
+        </a>
+      </div>
+    </div>
+  </section>
+</main>

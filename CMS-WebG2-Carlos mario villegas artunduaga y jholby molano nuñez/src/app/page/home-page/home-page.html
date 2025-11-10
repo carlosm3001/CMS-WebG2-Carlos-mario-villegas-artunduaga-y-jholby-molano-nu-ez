@@ -1,0 +1,253 @@
+<main>
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-br from-green-900 via-emerald-800 to-green-900 text-white overflow-hidden" aria-labelledby="hero-title">
+    <!-- Decorative Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <pattern id="leaf-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M10 0 Q15 5 20 10 Q15 15 10 20 Q5 15 0 10 Q5 5 10 0" fill="currentColor"/>
+        </pattern>
+        <rect width="100" height="100" fill="url(#leaf-pattern)"/>
+      </svg>
+    </div>
+
+    <div class="container mx-auto px-4 py-20 md:py-32 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 id="hero-title" class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          Descubre las Historias del <span class="text-amber-400">Pulmón del Planeta</span>
+        </h2>
+        <p class="text-lg md:text-xl text-emerald-100 mb-8 leading-relaxed">
+          Noticias sobre conservación, biodiversidad y las comunidades que protegen la Amazonía
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="#noticias" class="inline-block bg-amber-500 hover:bg-amber-600 text-green-900 px-8 py-4 rounded-lg font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            Explorar Noticias
+          </a>
+          <a href="#categorias" class="inline-block bg-transparent border-2 border-white hover:bg-white hover:text-green-900 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all">
+            Ver Categorías
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wave Divider -->
+    <div class="absolute bottom-0 left-0 right-0">
+      <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 80C1200 80 1320 70 1380 65L1440 60V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Featured News Section -->
+  <section id="noticias" class="py-16 bg-white" aria-labelledby="featured-title">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 id="featured-title" class="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+          Noticias Destacadas
+        </h2>
+        <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+          Las historias más importantes de la Amazonía que están marcando la diferencia
+        </p>
+      </div>
+
+      <!-- Main Featured News -->
+      <article class="mb-12 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow">
+        <div class="grid md:grid-cols-2 gap-0">
+          <div class="relative h-64 md:h-auto">
+            <img
+              [src]="noticiaDestacada().imagen[0]"
+              [alt]="noticiaDestacada().titulo"
+              class="w-full h-full object-cover"
+            />
+            <span class="absolute top-4 left-4 bg-amber-500 text-green-900 px-4 py-2 rounded-full text-sm font-bold shadow-md">
+              {{ getNombreCategoria(noticiaDestacada().categoriaId) }}
+            </span>
+          </div>
+          <div class="p-8 md:p-10 flex flex-col justify-center">
+            <time [attr.datetime]="noticiaDestacada().fechaCreacion.toISOString()" class="text-sm text-gray-600 mb-3">
+              {{ noticiaDestacada().fechaCreacion | date:'d \'de\' MMMM, y':'':'es' }}
+            </time>
+            <h3 class="text-2xl md:text-3xl font-bold text-green-900 mb-4">
+              {{ noticiaDestacada().titulo }}
+            </h3>
+            <p class="text-gray-700 mb-6 leading-relaxed">
+              {{ noticiaDestacada().subtitulo }}
+            </p>
+            <a href="#" class="inline-flex items-center text-green-700 hover:text-green-900 font-semibold group">
+              Leer más
+              <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- News Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        @for (noticia of noticiasGrid(); track noticia.id) {
+          <article class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2">
+            <div class="relative h-48">
+              <img
+                [src]="noticia.imagen[0]"
+                [alt]="noticia.titulo"
+                class="w-full h-full object-cover"
+              />
+              <span class="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                {{ getNombreCategoria(noticia.categoriaId) }}
+              </span>
+            </div>
+            <div class="p-6">
+              <time [attr.datetime]="noticia.fechaCreacion.toISOString()" class="text-xs text-gray-500">
+                {{ noticia.fechaCreacion | date:'d \'de\' MMMM, y':'':'es' }}
+              </time>
+              <h3 class="text-xl font-bold text-gray-900 mt-2 mb-3">
+                {{ noticia.titulo }}
+              </h3>
+              <p class="text-gray-600 text-sm mb-4">
+                {{ noticia.subtitulo }}
+              </p>
+              <a href="#" class="text-green-700 hover:text-green-900 font-semibold text-sm inline-flex items-center">
+                Leer artículo →
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section id="categorias" class="py-16 bg-gradient-to-br from-green-50 to-emerald-50" aria-labelledby="categories-title">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 id="categories-title" class="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+          Explora por Categorías
+        </h2>
+        <p class="text-gray-600 text-lg">
+          Encuentra noticias sobre los temas que más te interesan
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        @for (categoria of categorias(); track $index) {
+          <a href="#" class="group bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all text-center transform hover:-translate-y-1">
+            <div class="text-4xl mb-3">{{ categoria.nombre.split(' ')[0] }}</div>
+            <h3 class="font-bold text-gray-900 group-hover:text-green-700">
+              {{ categoria.nombre.split(' ').slice(1).join(' ') }}
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">{{ categoria.descripcion }}</p>
+          </a>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest News Section -->
+  <section class="py-16 bg-white" aria-labelledby="latest-title">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between mb-8">
+        <h2 id="latest-title" class="text-3xl font-bold text-green-900">
+          Últimas Noticias
+        </h2>
+        <a href="#" class="text-green-700 hover:text-green-900 font-semibold inline-flex items-center">
+          Ver todas
+          <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="space-y-6">
+        @for (noticia of noticiasUltimas(); track noticia.id) {
+          <article class="flex flex-col md:flex-row gap-6 bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors">
+            <img
+              [src]="noticia.imagen[0]"
+              [alt]="noticia.titulo"
+              class="w-full md:w-48 h-32 object-cover rounded-lg flex-shrink-0"
+            />
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                  {{ getNombreCategoria(noticia.categoriaId) }}
+                </span>
+                <time [attr.datetime]="noticia.fechaCreacion.toISOString()" class="text-xs text-gray-500">
+                  {{ getHorasTranscurridas(noticia.fechaCreacion) }}
+                </time>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">
+                {{ noticia.titulo }}
+              </h3>
+              <p class="text-gray-600 text-sm">
+                {{ noticia.subtitulo }}
+              </p>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="py-16 bg-gradient-to-r from-green-800 via-emerald-700 to-green-800 text-white" aria-labelledby="newsletter-title">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="inline-block bg-amber-400 rounded-full p-4 mb-6">
+          <svg class="w-8 h-8 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <h2 id="newsletter-title" class="text-3xl md:text-4xl font-bold mb-4">
+          Recibe Noticias de la Amazonía
+        </h2>
+        <p class="text-emerald-100 text-lg mb-8">
+          Mantente informado sobre las últimas historias de conservación, biodiversidad y comunidades amazónicas
+        </p>
+        <form class="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto" aria-label="Formulario de suscripción">
+          <label for="email-input" class="sr-only">Correo electrónico</label>
+          <input
+            type="email"
+            id="email-input"
+            placeholder="tu@email.com"
+            class="flex-1 px-6 py-4 rounded-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-amber-400 transition-shadow"
+            required
+            aria-required="true"
+          />
+          <button
+            type="submit"
+            class="bg-amber-500 hover:bg-amber-600 text-green-900 px-8 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl"
+          >
+            Suscribirme
+          </button>
+        </form>
+        <p class="text-emerald-200 text-sm mt-4">
+          📧 Newsletter semanal • 🔒 Sin spam • ❌ Cancela cuando quieras
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="py-16 bg-white" aria-label="Estadísticas del sitio">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="text-center">
+          <div class="text-4xl md:text-5xl font-bold text-green-700 mb-2">524</div>
+          <p class="text-gray-600 font-medium">Artículos Publicados</p>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl md:text-5xl font-bold text-green-700 mb-2">12K+</div>
+          <p class="text-gray-600 font-medium">Lectores Mensuales</p>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl md:text-5xl font-bold text-green-700 mb-2">85</div>
+          <p class="text-gray-600 font-medium">Colaboradores</p>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl md:text-5xl font-bold text-green-700 mb-2">6</div>
+          <p class="text-gray-600 font-medium">Países Cubiertos</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

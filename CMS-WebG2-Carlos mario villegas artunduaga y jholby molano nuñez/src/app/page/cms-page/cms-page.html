@@ -1,0 +1,394 @@
+<div class="cms-container">
+  <!-- Guard: Verificar acceso -->
+  @if (!tieneAcceso()) {
+    <div class="sin-acceso">
+      <div class="sin-acceso-card">
+        <div class="icono-advertencia">🚫</div>
+        <h2>Acceso Denegado</h2>
+        <p>Solo usuarios con rol <strong>Reportero</strong> o <strong>Editor</strong> pueden acceder a esta página.</p>
+        <p>Tu rol actual: <strong>{{ usuarioActual()?.rol || 'No autenticado' }}</strong></p>
+        <button class="btn-volver" (click)="router.navigate(['/home'])">
+          Volver al Inicio
+        </button>
+      </div>
+    </div>
+  } @else {
+    <!-- Mensajes de éxito/error -->
+    @if (mensajeExito()) {
+      <div class="mensaje mensaje-exito">
+        <span class="icono-mensaje">✓</span>
+        {{ mensajeExito() }}
+        <button class="cerrar-mensaje" (click)="limpiarMensajes()">✕</button>
+      </div>
+    }
+    @if (mensajeError()) {
+      <div class="mensaje mensaje-error">
+        <span class="icono-mensaje">⚠</span>
+        {{ mensajeError() }}
+        <button class="cerrar-mensaje" (click)="limpiarMensajes()">✕</button>
+      </div>
+    }
+
+    <!-- Vista Lista -->
+    @if (modo() === 'lista') {
+      <div class="cms-header">
+        <div class="header-content">
+          <h1>📰 Mis Noticias</h1>
+          <p class="subtitulo">Gestiona tus artículos sobre la Amazonía</p>
+        </div>
+        <button class="btn-crear" (click)="cambiarModo('crear')">
+          <span class="icono-btn">+</span>
+          Nueva Noticia
+        </button>
+      </div>
+
+      <!-- Filtros por estado -->
+      <div class="filtros">
+        <button
+          class="filtro-btn"
+          [class.activo]="filtroEstado() === 'todas'"
+          (click)="cambiarFiltro('todas')">
+          Todas ({{ noticias().length }})
+        </button>
+        <button
+          class="filtro-btn"
+          [class.activo]="filtroEstado() === EstadoPublicacion.BORRADOR"
+          (click)="cambiarFiltro(EstadoPublicacion.BORRADOR)">
+          Borradores ({{ contadorBorradores() }})
+        </button>
+        <button
+          class="filtro-btn"
+          [class.activo]="filtroEstado() === EstadoPublicacion.PENDIENTE"
+          (click)="cambiarFiltro(EstadoPublicacion.PENDIENTE)">
+          Pendientes ({{ contadorPendientes() }})
+        </button>
+        <button
+          class="filtro-btn"
+          [class.activo]="filtroEstado() === EstadoPublicacion.PUBLICADO"
+          (click)="cambiarFiltro(EstadoPublicacion.PUBLICADO)">
+          Publicadas ({{ contadorPublicadas() }})
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      @if (cargando()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Cargando noticias...</p>
+        </div>
+      }
+
+      <!-- Lista de noticias -->
+      @if (!cargando()) {
+        @if (noticiasFiltradas().length === 0) {
+          <div class="sin-resultados">
+            <div class="icono-vacio">📝</div>
+            <h3>No hay noticias en esta categoría</h3>
+            <p>Crea tu primera noticia para comenzar</p>
+          </div>
+        } @else {
+          <div class="noticias-grid">
+            @for (noticia of noticiasFiltradas(); track noticia.id) {
+              <div class="noticia-card">
+                <!-- Imagen de la noticia -->
+                <div class="noticia-imagen">
+                  @if (noticia.imagen && noticia.imagen.length > 0) {
+                    <img [src]="noticia.imagen[0]" [alt]="noticia.titulo" />
+                  } @else {
+                    <div class="placeholder-imagen">📷</div>
+                  }
+                  <span class="badge-estado" [class]="obtenerClaseEstado(noticia.estado)">
+                    {{ noticia.estado }}
+                  </span>
+                </div>
+
+                <!-- Contenido de la noticia -->
+                <div class="noticia-contenido">
+                  <div class="noticia-categoria">
+                    {{ obtenerNombreCategoria(noticia.categoriaId) }}
+                  </div>
+                  <h3 class="noticia-titulo">{{ noticia.titulo }}</h3>
+                  <p class="noticia-subtitulo">{{ noticia.subtitulo }}</p>
+                  <div class="noticia-fecha">
+                    📅 {{ formatearFecha(noticia.fechaCreacion) }}
+                  </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="noticia-acciones">
+                  @if (puedeEditar(noticia)) {
+                    <button
+                      class="btn-accion btn-editar"
+                      (click)="cambiarModo('editar', noticia)"
+                      title="Editar">
+                      ✏️ Editar
+                    </button>
+                  }
+
+                  @if (noticia.estado === EstadoPublicacion.BORRADOR) {
+                    <button
+                      class="btn-accion btn-enviar"
+                      (click)="cambiarEstadoNoticia(noticia, EstadoPublicacion.PENDIENTE)"
+                      title="Enviar a revisión">
+                      📤 Enviar
+                    </button>
+                  }
+
+                  <button
+                    class="btn-accion btn-eliminar"
+                    (click)="confirmarEliminar(noticia)"
+                    title="Eliminar">
+                    🗑️ Eliminar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+
+    <!-- Vista Formulario (Crear/Editar) -->
+    @if (modo() === 'crear' || modo() === 'editar') {
+      <div class="formulario-container">
+        <div class="formulario-header">
+          <h2>{{ modo() === 'crear' ? '✍️ Nueva Noticia' : '✏️ Editar Noticia' }}</h2>
+          <button class="btn-cerrar" (click)="cambiarModo('lista')">✕</button>
+        </div>
+
+        <form class="formulario-noticia" (submit)="$event.preventDefault(); guardarNoticia()">
+          <!-- Título -->
+          <div class="form-group">
+            <label class="form-label" for="titulo">
+              Título <span class="requerido">*</span>
+            </label>
+            <input
+              type="text"
+              id="titulo"
+              class="form-input"
+              [value]="formTitulo()"
+              (input)="formTitulo.set($any($event.target).value)"
+              placeholder="Ingresa un título atractivo"
+              required
+              maxlength="200"
+            />
+            <small class="form-hint">{{ formTitulo().length }}/200 caracteres</small>
+          </div>
+
+          <!-- Subtítulo -->
+          <div class="form-group">
+            <label class="form-label" for="subtitulo">
+              Subtítulo <span class="requerido">*</span>
+            </label>
+            <input
+              type="text"
+              id="subtitulo"
+              class="form-input"
+              [value]="formSubtitulo()"
+              (input)="formSubtitulo.set($any($event.target).value)"
+              placeholder="Resume la noticia en una línea"
+              required
+              maxlength="300"
+            />
+            <small class="form-hint">{{ formSubtitulo().length }}/300 caracteres</small>
+          </div>
+
+          <!-- Categoría -->
+          <div class="form-group">
+            <label class="form-label" for="categoria">
+              Categoría <span class="requerido">*</span>
+            </label>
+
+            <!-- Loading de categorías -->
+            @if (categoriasCargando()) {
+              <div class="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                <span class="text-sm text-gray-600">Cargando categorías...</span>
+              </div>
+            } @else if (categoriasError()) {
+              <div class="p-3 border border-red-200 bg-red-50 rounded-lg">
+                <p class="text-sm text-red-800">{{ categoriasError() }}</p>
+              </div>
+            } @else {
+              <select
+                id="categoria"
+                class="form-select"
+                [value]="formCategoriaId()"
+                (change)="formCategoriaId.set($any($event.target).value)"
+                required
+              >
+                <option value="">Selecciona una categoría</option>
+                @for (categoria of categorias(); track categoria.id) {
+                  <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <!-- Contenido -->
+          <div class="form-group">
+            <label class="form-label" for="contenido">
+              Contenido <span class="requerido">*</span>
+            </label>
+            <textarea
+              id="contenido"
+              class="form-textarea"
+              [value]="formContenido()"
+              (input)="formContenido.set($any($event.target).value)"
+              placeholder="Escribe el contenido de tu noticia (mínimo 50 caracteres)"
+              required
+              rows="10"
+            ></textarea>
+            <small class="form-hint">
+              {{ formContenido().length }} caracteres
+              @if (formContenido().length < 50) {
+                <span class="texto-advertencia"> (Mínimo 50)</span>
+              }
+            </small>
+          </div>
+
+          <!-- Imágenes -->
+          <div class="form-group">
+            <label class="form-label">
+              Imágenes <span class="requerido">*</span>
+            </label>
+            <small class="form-hint">
+              Selecciona hasta 5 imágenes (JPG, PNG, GIF, WebP - máx. 5MB cada una)
+            </small>
+
+            <!-- Input de archivos -->
+            <input
+              type="file"
+              class="form-input"
+              multiple
+              accept="image/*"
+              (change)="seleccionarArchivos($event)"
+              #fileInput
+            />
+
+            <!-- Previews de imágenes -->
+            @if (imagenesPreview().length > 0) {
+              <div class="imagenes-preview">
+                @for (preview of imagenesPreview(); track $index) {
+                  <div class="imagen-preview">
+                    <img [src]="preview" alt="Preview" class="imagen-preview-img" />
+                    <button
+                      type="button"
+                      class="btn-eliminar-preview"
+                      (click)="eliminarPreview($index)"
+                      title="Eliminar imagen"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Progreso de subida -->
+            @if (subiendoImagenes()) {
+              <div class="progreso-subida">
+                <div class="progreso-barra">
+                  <div
+                    class="progreso-llenado"
+                    [style.width.%]="storageService.progreso()"
+                  ></div>
+                </div>
+                <span class="progreso-texto">
+                  Subiendo imágenes... {{ storageService.progreso() | number:'1.0-0' }}%
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="form-acciones">
+            <button
+              type="button"
+              class="btn-cancelar"
+              (click)="cambiarModo('lista')"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn-guardar"
+              [disabled]="!formularioValido() || cargando() || !puedeCrearNoticia()"
+            >
+              @if (cargando()) {
+                <span class="spinner-small"></span>
+              }
+              💾 Guardar como Borrador
+            </button>
+
+            <button
+              type="button"
+              class="btn-enviar-revision"
+              [disabled]="!formularioValido() || cargando() || !puedeCrearNoticia()"
+              (click)="enviarARevision()"
+            >
+              @if (cargando()) {
+                <span class="spinner-small"></span>
+              }
+              📤 Enviar a Revisión
+            </button>
+          </div>
+
+          <!-- Validaciones -->
+          @if (!formularioValido()) {
+            <div class="validaciones">
+              <p class="validacion-titulo">Por favor completa:</p>
+              <ul>
+                @if (formTitulo().trim().length === 0) {
+                  <li>• Título es obligatorio</li>
+                }
+                @if (formSubtitulo().trim().length === 0) {
+                  <li>• Subtítulo es obligatorio</li>
+                }
+                @if (formContenido().trim().length < 50) {
+                  <li>• Contenido debe tener al menos 50 caracteres</li>
+                }
+                @if (formCategoriaId().trim().length === 0) {
+                  <li>• Categoría es obligatoria</li>
+                }
+                @if (!imagenesValidas()) {
+                  <li>• Al menos una imagen es requerida</li>
+                }
+              </ul>
+            </div>
+          }
+        </form>
+      </div>
+    }
+
+    <!-- Modal de confirmación de eliminación -->
+    @if (mostrarConfirmacionEliminar()) {
+      <div class="modal-overlay" (click)="cancelarEliminar()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>⚠️ Confirmar Eliminación</h3>
+            <button class="btn-cerrar" (click)="cancelarEliminar()">✕</button>
+          </div>
+          <div class="modal-contenido">
+            <p>¿Estás seguro de que deseas eliminar esta noticia?</p>
+            @if (noticiaSeleccionada()) {
+              <div class="noticia-preview">
+                <strong>{{ noticiaSeleccionada()!.titulo }}</strong>
+              </div>
+            }
+            <p class="advertencia">Esta acción no se puede deshacer.</p>
+          </div>
+          <div class="modal-acciones">
+            <button class="btn-cancelar" (click)="cancelarEliminar()">
+              Cancelar
+            </button>
+            <button class="btn-eliminar-confirmar" (click)="eliminarNoticia()">
+              Eliminar Definitivamente
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,227 @@
+<main class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 flex items-center justify-center px-4 py-12">
+  <div class="max-w-md w-full">
+
+    <!-- Logo/Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-green-900 mb-2">🌿 Noticias Amazónicas</h1>
+      <p class="text-gray-600">Únete a nuestra comunidad</p>
+    </div>
+
+    <!-- Card Principal -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+      <!-- Tabs Login/Registro -->
+      <div class="flex border-b border-gray-200">
+        <button
+          (click)="cambiarModo('login')"
+          [class.bg-green-50]="modo() === 'login'"
+          [class.border-b-2]="modo() === 'login'"
+          [class.border-green-600]="modo() === 'login'"
+          [class.text-green-700]="modo() === 'login'"
+          [class.font-bold]="modo() === 'login'"
+          class="flex-1 py-4 text-center font-semibold transition-colors hover:bg-green-50">
+          Iniciar Sesión
+        </button>
+        <button
+          (click)="cambiarModo('registro')"
+          [class.bg-green-50]="modo() === 'registro'"
+          [class.border-b-2]="modo() === 'registro'"
+          [class.border-green-600]="modo() === 'registro'"
+          [class.text-green-700]="modo() === 'registro'"
+          [class.font-bold]="modo() === 'registro'"
+          class="flex-1 py-4 text-center font-semibold transition-colors hover:bg-green-50">
+          Registrarse
+        </button>
+      </div>
+
+      <!-- Contenido -->
+      <div class="p-8">
+
+        <!-- Mensaje de Error -->
+        @if (error()) {
+          <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-2">
+            <span class="text-lg">⚠️</span>
+            <span class="flex-1">{{ error() }}</span>
+          </div>
+        }
+
+        <!-- Formulario Login -->
+        @if (modo() === 'login') {
+          <form (submit)="$event.preventDefault(); iniciarSesion()" class="space-y-5">
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                [value]="emailLogin()"
+                (input)="emailLogin.set($any($event.target).value)"
+                placeholder="tu@email.com"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña
+              </label>
+              <div class="relative">
+                <input
+                  [type]="mostrarPassword() ? 'text' : 'password'"
+                  [value]="passwordLogin()"
+                  (input)="passwordLogin.set($any($event.target).value)"
+                  placeholder="••••••••"
+                  class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                  required
+                />
+                <button
+                  type="button"
+                  (click)="toggleMostrarPassword()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xl transition-colors">
+                  {{ mostrarPassword() ? '👁️' : '👁️‍🗨️' }}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="cargando"
+              class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-emerald-600">
+              @if (cargando) {
+                <span class="flex items-center justify-center gap-2">
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Cargando...
+                </span>
+              } @else {
+                <span>Iniciar Sesión</span>
+              }
+            </button>
+          </form>
+        }
+
+        <!-- Formulario Registro -->
+        @if (modo() === 'registro') {
+          <form (submit)="$event.preventDefault(); registrarse()" class="space-y-4">
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  [value]="nombre()"
+                  (input)="nombre.set($any($event.target).value)"
+                  placeholder="Juan"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Apellido
+                </label>
+                <input
+                  type="text"
+                  [value]="apellido()"
+                  (input)="apellido.set($any($event.target).value)"
+                  placeholder="Pérez"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Número de Teléfono
+              </label>
+              <input
+                type="tel"
+                [value]="numero()"
+                (input)="numero.set($any($event.target).value)"
+                placeholder="+57 300 123 4567"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico
+              </label>
+              <input
+                type="email"
+                [value]="emailRegistro()"
+                (input)="emailRegistro.set($any($event.target).value)"
+                placeholder="tu@email.com"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                [value]="passwordRegistro()"
+                (input)="passwordRegistro.set($any($event.target).value)"
+                placeholder="Mínimo 6 caracteres"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Confirmar Contraseña
+              </label>
+              <input
+                type="password"
+                [value]="confirmarPassword()"
+                (input)="confirmarPassword.set($any($event.target).value)"
+                placeholder="Repite tu contraseña"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="cargando"
+              class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-emerald-600">
+              @if (cargando) {
+                <span class="flex items-center justify-center gap-2">
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Registrando...
+                </span>
+              } @else {
+                <span>Crear Cuenta</span>
+              }
+            </button>
+          </form>
+        }
+
+      </div>
+    </div>
+
+    <!-- Link alternativo -->
+    <p class="text-center mt-6 text-gray-600">
+      <a href="/" class="text-green-600 hover:text-green-700 font-semibold hover:underline transition-colors">
+        ← Volver al inicio
+      </a>
+    </p>
+
+  </div>
+</main>

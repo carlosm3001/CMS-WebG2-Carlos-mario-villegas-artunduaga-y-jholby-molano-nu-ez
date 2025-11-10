@@ -1,0 +1,376 @@
+<main class="admin-dashboard">
+  <!-- Header -->
+  <header class="admin-header">
+    <h1>Panel de Administración</h1>
+    <p class="welcome-text">
+      Bienvenido, {{ usuarioActual()?.nombre }} {{ usuarioActual()?.apellido }}
+      <span class="user-role">({{ usuarioActual()?.rol }})</span>
+    </p>
+  </header>
+
+  <!-- Mensaje de estado -->
+  @if (mensaje()) {
+    <div class="message-banner" [class.error]="mensaje().includes('Error')">
+      {{ mensaje() }}
+    </div>
+  }
+
+  <!-- Loading overlay -->
+  @if (cargando()) {
+    <div class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>Cargando...</p>
+    </div>
+  }
+
+  <!-- Tabs de navegación -->
+  <nav class="admin-tabs">
+    <button
+      [class.active]="seccionActiva() === 'dashboard'"
+      (click)="cambiarSeccion('dashboard')">
+      Dashboard
+    </button>
+    <button
+      [class.active]="seccionActiva() === 'usuarios'"
+      (click)="cambiarSeccion('usuarios')">
+      Usuarios
+    </button>
+    <button
+      [class.active]="seccionActiva() === 'publicaciones'"
+      (click)="cambiarSeccion('publicaciones')">
+      Publicaciones
+    </button>
+    <button
+      [class.active]="seccionActiva() === 'categorias'"
+      (click)="cambiarSeccion('categorias')">
+      Categorías
+    </button>
+  </nav>
+
+  <!-- Contenido dinámico -->
+  <div class="admin-content">
+    <!-- DASHBOARD -->
+    @if (seccionActiva() === 'dashboard') {
+      <section class="dashboard-section">
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+              <h3>Total Usuarios</h3>
+              <span class="stat-number">{{ estadisticas()?.totalUsuarios || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📰</div>
+            <div class="stat-content">
+              <h3>Total Noticias</h3>
+              <span class="stat-number">{{ estadisticas()?.totalNoticias || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📂</div>
+            <div class="stat-content">
+              <h3>Categorías</h3>
+              <span class="stat-number">{{ estadisticas()?.totalCategorias || 0 }}</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-content">
+              <h3>Pendientes</h3>
+              <span class="stat-number">{{ estadisticas()?.noticiasPorEstado?.['Pendiente'] || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalles de estadísticas -->
+        <div class="stats-details">
+          <div class="detail-section">
+            <h4>Usuarios por Rol</h4>
+            <ul class="stats-list">
+              @for (rol of rolesUsuario; track rol) {
+                <li>
+                  <span class="stat-label">{{ rol }}</span>
+                  <span class="stat-value">{{ estadisticas()?.usuariosPorRol?.[rol] || 0 }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="detail-section">
+            <h4>Publicaciones por Estado</h4>
+            <ul class="stats-list">
+              @for (estado of estadosPublicacion; track estado) {
+                <li>
+                  <span class="stat-label">{{ estado }}</span>
+                  <span class="stat-value">{{ estadisticas()?.noticiasPorEstado?.[estado] || 0 }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- USUARIOS -->
+    @if (seccionActiva() === 'usuarios') {
+      <section class="usuarios-section">
+        <div class="section-header">
+          <h2>Gestión de Usuarios</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, email o rol..."
+              [(ngModel)]="filtroUsuario"
+              class="search-input">
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuariosFiltrados(); track usuario.uid) {
+                <tr [style.background-color]="esUsuarioActual(usuario.uid) ? 'rgba(116, 198, 157, 0.1)' : 'transparent'">
+                  <td>{{ usuario.nombre }} {{ usuario.apellido }} @if (esUsuarioActual(usuario.uid)) { <small style="color: #74c69d; font-weight: 600;">(Tú)</small> }</td>
+                  <td>{{ usuario.email }}</td>
+                  <td>
+                    @if (esUsuarioActual(usuario.uid)) {
+                      <span style="font-weight: 600; color: #74c69d;">{{ usuario.rol }}</span>
+                      <small style="color: #6b7280; font-style: italic;">No editable</small>
+                    } @else {
+                      <select
+                        [value]="usuario.rol"
+                        (change)="cambiarRolUsuario(usuario.uid, $any($event.target).value)"
+                        class="role-select">
+                        @for (rol of rolesUsuario; track rol) {
+                          <option [value]="rol">{{ rol }}</option>
+                        }
+                      </select>
+                    }
+                  </td>
+                  <td>{{ usuario.numero }}</td>
+                  <td>
+                    @if (esUsuarioActual(usuario.uid)) {
+                      <span style="color: #6b7280; font-style: italic;">No disponible</span>
+                    } @else {
+                      <button
+                        class="btn-danger btn-small"
+                        (click)="eliminarUsuario(usuario.uid, usuario.nombre + ' ' + usuario.apellido)">
+                        Eliminar
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (usuariosFiltrados().length === 0) {
+          <div class="empty-state">
+            <p>No se encontraron usuarios</p>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- PUBLICACIONES -->
+    @if (seccionActiva() === 'publicaciones') {
+      <section class="publicaciones-section">
+        <div class="section-header">
+          <h2>Gestión de Publicaciones</h2>
+          <div class="filters">
+            <select [(ngModel)]="filtroPublicacion().estado" class="filter-select">
+              <option value="">Todos los estados</option>
+              @for (estado of estadosPublicacion; track estado) {
+                <option [value]="estado">{{ estado }}</option>
+              }
+            </select>
+
+            <select [(ngModel)]="filtroPublicacion().categoria" class="filter-select">
+              <option value="">Todas las categorías</option>
+              @for (categoria of categorias(); track categoria.id) {
+                <option [value]="categoria.id">{{ categoria.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (publicacion of publicacionesFiltradas(); track publicacion.id) {
+                <tr>
+                  <td>{{ publicacion.titulo }}</td>
+                  <td>{{ getNombreUsuario(publicacion.autorUid) }}</td>
+                  <td>{{ getNombreCategoria(publicacion.categoriaId) }}</td>
+                  <td>
+                    <select
+                      [value]="publicacion.estado"
+                      (change)="cambiarEstadoPublicacion(publicacion.id, $any($event.target).value)"
+                      class="status-select">
+                      @for (estado of estadosPublicacion; track estado) {
+                        <option [value]="estado">{{ estado }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td>{{ formatearFecha(publicacion.fechaCreacion) }}</td>
+                  <td>
+                    <button
+                      class="btn-danger btn-small"
+                      (click)="eliminarPublicacion(publicacion.id, publicacion.titulo)">
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (publicacionesFiltradas().length === 0) {
+          <div class="empty-state">
+            <p>No se encontraron publicaciones</p>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- CATEGORÍAS -->
+    @if (seccionActiva() === 'categorias') {
+      <section class="categorias-section">
+        <div class="section-header">
+          <h2>Gestión de Categorías</h2>
+        </div>
+
+        <!-- Formulario para nueva categoría -->
+        <div class="form-card">
+          <h3>Crear Nueva Categoría</h3>
+          <form (ngSubmit)="crearCategoria()" class="categoria-form">
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input
+                id="nombre"
+                type="text"
+                [(ngModel)]="nuevaCategoria().nombre"
+                name="nombre"
+                required
+                class="form-input">
+              </div>
+
+              <div class="form-group">
+                <label for="descripcion">Descripción</label>
+                <textarea
+                  id="descripcion"
+                  [(ngModel)]="nuevaCategoria().descripcion"
+                  name="descripcion"
+                  rows="3"
+                  class="form-textarea">
+                </textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">Crear Categoría</button>
+          </form>
+        </div>
+
+        <!-- Lista de categorías -->
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (categoria of categorias(); track categoria.id) {
+                <tr>
+                  <td>
+                    @if (categoriaEditando()?.id === categoria.id) {
+                      <input
+                        type="text"
+                        [(ngModel)]="categoriaEditando()!.nombre"
+                        class="edit-input">
+                    } @else {
+                      {{ categoria.nombre }}
+                    }
+                  </td>
+                  <td>
+                    @if (categoriaEditando()?.id === categoria.id) {
+                      <textarea
+                        [(ngModel)]="categoriaEditando()!.descripcion"
+                        rows="2"
+                        class="edit-textarea">
+                      </textarea>
+                    } @else {
+                      {{ categoria.descripcion || 'Sin descripción' }}
+                    }
+                  </td>
+                  <td>
+                    @if (categoriaEditando()?.id === categoria.id) {
+                      <div class="action-buttons">
+                        <button
+                          class="btn-success btn-small"
+                          (click)="guardarEdicionCategoria()">
+                          Guardar
+                        </button>
+                        <button
+                          class="btn-secondary btn-small"
+                          (click)="cancelarEdicionCategoria()">
+                          Cancelar
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="action-buttons">
+                        <button
+                          class="btn-primary btn-small"
+                          (click)="iniciarEdicionCategoria(categoria)">
+                          Editar
+                        </button>
+                        <button
+                          class="btn-danger btn-small"
+                          (click)="eliminarCategoria(categoria.id, categoria.nombre)">
+                          Eliminar
+                        </button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (categorias().length === 0) {
+          <div class="empty-state">
+            <p>No hay categorías creadas</p>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</main>
