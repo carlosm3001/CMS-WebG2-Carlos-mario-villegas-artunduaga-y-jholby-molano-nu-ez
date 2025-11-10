@@ -9,9 +9,11 @@ import {
 } from '@angular/fire/auth';
 import {
   Firestore,
+  collection,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  getDocs
 } from '@angular/fire/firestore';
 import { Usuario } from '../models/Usuario.model';
 import { TipoRole } from '../enum/TipoRole';
@@ -127,6 +129,31 @@ export class AuthService {
   // Obtener usuario actual
   get usuario(): Usuario | null {
     return this.usuarioActual();
+  }
+
+  // Obtener todos los usuarios
+  async obtenerUsuarios(): Promise<Usuario[]> {
+    try {
+      const querySnapshot = await getDocs(collection(this.firestore, 'usuarios'));
+      const usuarios: Usuario[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        usuarios.push({
+          uid: doc.id,
+          email: data['email'],
+          nombre: data['nombre'],
+          apellido: data['apellido'],
+          numero: data['numero'],
+          rol: data['rol']
+        });
+      });
+
+      return usuarios;
+    } catch (error) {
+      console.error('Error obteniendo usuarios:', error);
+      throw error;
+    }
   }
 
   // Verificar si está autenticado

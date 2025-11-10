@@ -19,37 +19,45 @@
       <!-- Desktop Navigation -->
       <ul class="hidden md:flex items-center space-x-6" role="menubar">
         <li role="none">
-          <a routerLink="/home"
-             class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">Inicio</a>
+          <a routerLink="/home" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">
+            Inicio
+          </a>
         </li>
         <li role="none">
-          <a routerLink="/noticias"
-             class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">Noticias</a>
+          <a routerLink="/noticias" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">
+            Noticias
+          </a>
         </li>
-        <li role="none">
-          <a href="#" class="text-white hover:text-amber-300 transition-colors font-medium"
-             role="menuitem">Categorías</a>
-        </li>
-        <li role="none">
-          <a href="#" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">Biodiversidad</a>
-        </li>
-        <li role="none">
-          <a href="#" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">Contacto</a>
-        </li>
+
+        <!-- Solo para Reporteros y Editores -->
+        @if (tieneAccesoCMS()) {
+          <li role="none">
+            <a routerLink="/cms" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">
+              Crear Noticia
+            </a>
+          </li>
+        }
+
+        <!-- Solo para Editores -->
+        @if (tieneAccesoAdmin()) {
+          <li role="none">
+            <a routerLink="/admin" class="text-white hover:text-amber-300 transition-colors font-medium" role="menuitem">
+              Dashboard
+            </a>
+          </li>
+        }
+
+        <!-- Perfil/Login según estado de autenticación -->
         @if (authService.usuarioActual()) {
           <li role="none">
-            <a routerLink="/perfil"
-               class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-green-900 px-4 py-2 rounded-lg font-semibold transition-colors shadow-md"
-               role="menuitem">
+            <a routerLink="/perfil" class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-green-900 px-4 py-2 rounded-lg font-semibold transition-colors shadow-md" role="menuitem">
               <span>👤</span>
               <span>Mi Perfil</span>
             </a>
           </li>
         } @else {
           <li role="none">
-            <a routerLink="/login"
-               class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-green-900 px-4 py-2 rounded-lg font-semibold transition-colors shadow-md"
-               role="menuitem">
+            <a routerLink="/login" class="flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-green-900 px-4 py-2 rounded-lg font-semibold transition-colors shadow-md" role="menuitem">
               <span>🔐</span>
               <span>Iniciar Sesión</span>
             </a>

@@ -1,21 +1,38 @@
 <main class="bg-gray-50 min-h-screen">
-
-  <!-- Botón Volver -->
-  <div class="container mx-auto px-4 py-4">
-    <button
-      (click)="volverAtras()"
-      class="inline-flex items-center gap-2 text-green-700 hover:text-green-900 font-semibold transition-colors duration-200"
-      aria-label="Volver a noticias"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      Volver a noticias
-    </button>
-  </div>
-
-  <!-- Artículo Principal -->
-  <article class="bg-white">
+  @if (cargando()) {
+    <!-- Loading State -->
+    <div class="container mx-auto px-4 py-20">
+      <div class="max-w-4xl mx-auto">
+        <div class="animate-pulse">
+          <div class="h-8 bg-gray-300 rounded mb-4"></div>
+          <div class="h-12 bg-gray-300 rounded mb-6"></div>
+          <div class="h-64 bg-gray-300 rounded mb-8"></div>
+          <div class="space-y-4">
+            <div class="h-4 bg-gray-300 rounded"></div>
+            <div class="h-4 bg-gray-300 rounded"></div>
+            <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else if (error()) {
+    <!-- Error State -->
+    <div class="container mx-auto px-4 py-20">
+      <div class="max-w-2xl mx-auto text-center">
+        <div class="text-6xl mb-4">😵</div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Error al cargar la noticia</h1>
+        <p class="text-gray-600 mb-6">{{ error() }}</p>
+        <button
+          (click)="volverAtras()"
+          class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          Volver atrás
+        </button>
+      </div>
+    </div>
+  } @else if (noticiaActual()) {
+    <!-- Artículo Principal -->
+    <article class="bg-white">
     <div class="container mx-auto px-4 py-12">
 
       <!-- Encabezado -->
@@ -29,12 +46,12 @@
 
         <!-- Título -->
         <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-          {{ noticiaActual().titulo }}
+          {{ noticiaActual()!.titulo }}
         </h1>
 
         <!-- Subtítulo -->
         <p class="text-xl text-gray-600 mb-6 leading-relaxed">
-          {{ noticiaActual().subtitulo }}
+          {{ noticiaActual()!.subtitulo }}
         </p>
 
         <!-- Metadatos -->
@@ -50,8 +67,8 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <time [attr.datetime]="noticiaActual().fechaCreacion.toISOString()">
-              {{ noticiaActual().fechaCreacion | date:'d \'de\' MMMM, y':'':'es' }}
+            <time [attr.datetime]="noticiaActual()!.fechaCreacion.toISOString()">
+              {{ noticiaActual()!.fechaCreacion | date:'d \'de\' MMMM, y':'':'es' }}
             </time>
           </div>
           <span class="text-gray-300">•</span>
@@ -67,8 +84,8 @@
       <!-- Imagen Principal -->
       <div class="max-w-5xl mx-auto mb-12">
         <img
-          [src]="noticiaActual().imagen[0]"
-          [alt]="noticiaActual().titulo"
+          [src]="noticiaActual()!.imagen[0]"
+          [alt]="noticiaActual()!.titulo"
           class="w-full h-auto rounded-2xl shadow-2xl object-cover"
         />
       </div>
@@ -77,21 +94,21 @@
       <div class="max-w-3xl mx-auto">
         <div class="text-gray-800 leading-relaxed text-lg space-y-4">
           <p class="first-letter:text-7xl first-letter:font-bold first-letter:text-green-700 first-letter:float-left first-letter:mr-3 first-letter:leading-none first-letter:mt-1">
-            {{ noticiaActual().contenido }}
+            {{ noticiaActual()!.contenido }}
           </p>
         </div>
       </div>
 
       <!-- Galería de Imágenes Adicionales (si hay más de 1) -->
-      @if (noticiaActual().imagen.length > 1) {
+      @if (noticiaActual()!.imagen.length > 1) {
         <div class="max-w-5xl mx-auto mt-12 pt-12 border-t border-gray-200">
           <h2 class="text-2xl font-bold text-gray-900 mb-6">Galería de Imágenes</h2>
           <div class="grid md:grid-cols-2 gap-6">
-            @for (img of noticiaActual().imagen.slice(1); track $index) {
+            @for (img of noticiaActual()!.imagen.slice(1); track $index) {
               <div class="overflow-hidden rounded-xl shadow-lg transition-transform hover:scale-105">
                 <img
                   [src]="img"
-                  [alt]="'Imagen ' + ($index + 2) + ' de ' + noticiaActual().titulo"
+                  [alt]="'Imagen ' + ($index + 2) + ' de ' + noticiaActual()!.titulo"
                   class="w-full h-64 object-cover"
                 />
               </div>
@@ -139,6 +156,22 @@
 
     </div>
   </article>
+  } @else {
+    <!-- Noticia no encontrada -->
+    <div class="container mx-auto px-4 py-20">
+      <div class="max-w-2xl mx-auto text-center">
+        <div class="text-6xl mb-4">🔍</div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Noticia no encontrada</h1>
+        <p class="text-gray-600 mb-6">La noticia que buscas no existe o ha sido eliminada.</p>
+        <button
+          (click)="volverAtras()"
+          class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          Volver al inicio
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Noticias Relacionadas -->
   @if (noticiasRelacionadas().length > 0) {
@@ -176,7 +209,7 @@
                   {{ noticia.subtitulo }}
                 </p>
                 <a
-                  href="#"
+                  [routerLink]="['/detalle-noticia', noticia.id]"
                   class="inline-flex items-center gap-2 text-green-700 hover:text-green-900 font-semibold text-sm transition-colors"
                   [attr.aria-label]="'Leer artículo: ' + noticia.titulo"
                 >

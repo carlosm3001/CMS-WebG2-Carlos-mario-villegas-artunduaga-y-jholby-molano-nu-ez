@@ -152,8 +152,8 @@
                       <small style="color: #6b7280; font-style: italic;">No editable</small>
                     } @else {
                       <select
-                        [value]="usuario.rol"
-                        (change)="cambiarRolUsuario(usuario.uid, $any($event.target).value)"
+                        [(ngModel)]="usuario.rol"
+                        (ngModelChange)="cambiarRolUsuario(usuario.uid, $event)"
                         class="role-select">
                         @for (rol of rolesUsuario; track rol) {
                           <option [value]="rol">{{ rol }}</option>
@@ -229,8 +229,8 @@
                   <td>{{ getNombreCategoria(publicacion.categoriaId) }}</td>
                   <td>
                     <select
-                      [value]="publicacion.estado"
-                      (change)="cambiarEstadoPublicacion(publicacion.id, $any($event.target).value)"
+                      [(ngModel)]="publicacion.estado"
+                      (ngModelChange)="cambiarEstadoPublicacion(publicacion.id, $event)"
                       class="status-select">
                       @for (estado of estadosPublicacion; track estado) {
                         <option [value]="estado">{{ estado }}</option>

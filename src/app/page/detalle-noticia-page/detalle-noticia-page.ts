@@ -1,58 +1,112 @@
-import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, signal, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Noticia } from '../../models/Notica.model';
 import { Categoria } from '../../models/Categoria.model';
 import { Usuario } from '../../models/Usuario.model';
-import { NOTICIAS, CATEGORIAS, USUARIOS } from '../../data';
+import { NoticiaService } from '../../service/noticia.service';
+import { CategoriasService } from '../../service/categorias.service';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-detalle-noticia-page',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './detalle-noticia-page.html',
   styleUrl: './detalle-noticia-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DetalleNoticiaPage {
-  // Por ahora usamos la primera noticia como ejemplo
-  // En el futuro se obtendrá el ID de los route params
-  noticiaActual = signal<Noticia>(NOTICIAS[0]);
+export class DetalleNoticiaPage implements OnInit {
+  // Inyección de servicios
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private noticiaService = inject(NoticiaService);
+  private categoriasService = inject(CategoriasService);
+  private authService = inject(AuthService);
 
-  todasLasNoticias = signal<Noticia[]>(NOTICIAS);
-  categorias = signal<Categoria[]>(CATEGORIAS);
-  usuarios = signal<Usuario[]>(USUARIOS);
+  // Signals para datos dinámicos
+  noticiaActual = signal<Noticia | null>(null);
+  categorias = signal<Categoria[]>([]);
+  usuarios = signal<Usuario[]>([]);
+  todasLasNoticias = signal<Noticia[]>([]);
+  cargando = signal<boolean>(true);
+  error = signal<string>('');
 
-  // Computed: Categoría de la noticia actual
+  // Computed signals
   categoria = computed(() => {
-    const categoriaId = this.noticiaActual().categoriaId;
-    return this.categorias().find(c => c.id === categoriaId);
+    const noticia = this.noticiaActual();
+    if (!noticia) return null;
+    return this.categorias().find(c => c.id === noticia.categoriaId);
   });
 
-  // Computed: Autor de la noticia
   autor = computed(() => {
-    const autorUid = this.noticiaActual().autorUid;
-    return this.usuarios().find(u => u.uid === autorUid);
+    const noticia = this.noticiaActual();
+    if (!noticia) return null;
+    return this.usuarios().find(u => u.uid === noticia.autorUid);
   });
 
-  // Computed: Noticias relacionadas (misma categoría, excluyendo la actual)
   noticiasRelacionadas = computed(() => {
-    const categoriaId = this.noticiaActual().categoriaId;
-    const noticiaId = this.noticiaActual().id;
+    const noticia = this.noticiaActual();
+    if (!noticia) return [];
 
     return this.todasLasNoticias()
-      .filter(n => n.categoriaId === categoriaId && n.id !== noticiaId)
-      .slice(0, 3); // Máximo 3 noticias relacionadas
+      .filter(n => n.categoriaId === noticia.categoriaId && n.id !== noticia.id)
+      .slice(0, 3);
   });
 
-  // Computed: Tiempo estimado de lectura (basado en palabras)
   tiempoLectura = computed(() => {
-    const palabras = this.noticiaActual().contenido.split(' ').length;
-    const minutos = Math.ceil(palabras / 200); // ~200 palabras por minuto
-    return minutos;
+    const noticia = this.noticiaActual();
+    if (!noticia) return 0;
+
+    const palabras = noticia.contenido.split(' ').length;
+    return Math.ceil(palabras / 200);
   });
+
+  ngOnInit() {
+    this.cargarDatos();
+  }
+
+  async cargarDatos() {
+    try {
+      this.cargando.set(true);
+      this.error.set('');
+
+      // Obtener ID de la ruta
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) {
+        this.error.set('ID de noticia no encontrado en la URL');
+        return;
+      }
+
+      // Cargar datos en paralelo
+      const [noticia, categorias, usuarios, todasLasNoticias] = await Promise.all([
+        this.noticiaService.obtenerNoticiaPorId(id),
+        this.categoriasService.obtenerCategorias(),
+        this.authService.obtenerUsuarios(),
+        this.noticiaService.obtenerNoticiasPublicadas()
+      ]);
+
+      if (!noticia) {
+        this.error.set('La noticia no existe o ha sido eliminada');
+        return;
+      }
+
+      // Actualizar signals
+      this.noticiaActual.set(noticia);
+      this.categorias.set(categorias);
+      this.usuarios.set(usuarios);
+      this.todasLasNoticias.set(todasLasNoticias);
+
+    } catch (error) {
+      console.error('Error cargando datos de la noticia:', error);
+      this.error.set('Error al cargar la noticia. Por favor intenta de nuevo.');
+    } finally {
+      this.cargando.set(false);
+    }
+  }
 
   // Método para volver atrás
   volverAtras(): void {
-    window.history.back();
+    this.router.navigate(['/']);
   }
 
   // Método helper para obtener nombre de autor
@@ -61,19 +115,23 @@ export class DetalleNoticiaPage {
     return autor ? `${autor.nombre} ${autor.apellido}` : 'Autor desconocido';
   }
 
-  // Métodos de compartir (opcional, por ahora solo console.log)
+  // Métodos de compartir
   compartirFacebook(): void {
-    console.log('Compartir en Facebook');
-    // En producción: window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`)
+    const url = window.location.href;
+    const title = this.noticiaActual()?.titulo || '';
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`, '_blank');
   }
 
   compartirTwitter(): void {
-    console.log('Compartir en Twitter');
-    // En producción: window.open(`https://twitter.com/intent/tweet?url=${url}&text=${title}`)
+    const url = window.location.href;
+    const title = this.noticiaActual()?.titulo || '';
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank');
   }
 
   compartirWhatsApp(): void {
-    console.log('Compartir en WhatsApp');
-    // En producción: window.open(`https://wa.me/?text=${title} ${url}`)
+    const url = window.location.href;
+    const title = this.noticiaActual()?.titulo || '';
+    const text = `${title} - ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 }

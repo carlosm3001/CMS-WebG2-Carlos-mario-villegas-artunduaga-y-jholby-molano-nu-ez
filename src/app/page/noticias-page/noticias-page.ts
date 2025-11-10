@@ -1,20 +1,30 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { Noticia } from '../../models/Notica.model';
 import { Categoria } from '../../models/Categoria.model';
-import { NOTICIAS, CATEGORIAS } from '../../data';
+import { NoticiaService } from '../../service/noticia.service';
+import { CategoriasService } from '../../service/categorias.service';
 
 @Component({
   selector: 'app-noticias-page',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './noticias-page.html',
   styleUrl: './noticias-page.css',
 })
-export class NoticiasPage {
+export class NoticiasPage implements OnInit {
+  private noticiaService = inject(NoticiaService);
+  private categoriasService = inject(CategoriasService);
+  private router = inject(Router);
+
   // Datos
-  todasLasNoticias = signal<Noticia[]>(NOTICIAS);
-  categorias = signal<Categoria[]>(CATEGORIAS);
+  todasLasNoticias = signal<Noticia[]>([]);
+  categorias = signal<Categoria[]>([]);
+
+  // Estados de carga
+  cargandoNoticias = signal<boolean>(false);
+  cargandoCategorias = signal<boolean>(false);
 
   // Filtros
   busqueda = signal<string>('');
@@ -161,6 +171,30 @@ export class NoticiasPage {
 
   paginaSiguiente(): void {
     this.irAPagina(this.paginaActual() + 1);
+  }
+
+  ngOnInit() {
+    this.cargarDatos();
+  }
+
+  async cargarDatos() {
+    this.cargandoCategorias.set(true);
+    this.cargandoNoticias.set(true);
+
+    try {
+      const [categorias, noticias] = await Promise.all([
+        this.categoriasService.obtenerCategorias(),
+        this.noticiaService.obtenerNoticiasPublicadas()
+      ]);
+
+      this.categorias.set(categorias);
+      this.todasLasNoticias.set(noticias);
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+    } finally {
+      this.cargandoCategorias.set(false);
+      this.cargandoNoticias.set(false);
+    }
   }
 
   // Helper

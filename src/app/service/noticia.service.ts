@@ -9,6 +9,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
   orderBy,
   Timestamp
 } from '@angular/fire/firestore';
@@ -121,6 +122,72 @@ export class NoticiaService {
       throw error;
     } finally {
       this.cargando.set(false);
+    }
+  }
+
+  // Obtener noticias publicadas para la página de inicio
+  async obtenerNoticiasPublicadas(): Promise<Noticia[]> {
+    this.cargando.set(true);
+    try {
+      // SOLUCIÓN TEMPORAL: Obtener todas las noticias y filtrar en cliente
+      // TODO: Restaurar consulta con where y orderBy después de que el índice esté construido
+      const querySnapshot = await getDocs(collection(this.firestore, 'noticias'));
+
+      const noticias: Noticia[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data['estado'] === EstadoPublicacion.PUBLICADO) {
+          noticias.push({
+            id: doc.id,
+            titulo: data['titulo'],
+            subtitulo: data['subtitulo'],
+            contenido: data['contenido'],
+            categoriaId: data['categoriaId'],
+            imagen: data['imagen'] || [],
+            autorUid: data['autorUid'],
+            fechaCreacion: data['fechaCreacion']?.toDate() || new Date(),
+            fechaActualizacion: data['fechaActualizacion']?.toDate() || new Date(),
+            estado: data['estado']
+          });
+        }
+      });
+
+      // SOLUCIÓN TEMPORAL: Ordenar por fecha de creación descendente en cliente
+      // TODO: Remover ordenamiento cliente después de restaurar consulta optimizada
+      return noticias.sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
+    } catch (error) {
+      console.error('Error al obtener noticias publicadas:', error);
+      throw error;
+    } finally {
+      this.cargando.set(false);
+    }
+  }
+
+  // Obtener noticia por ID
+  async obtenerNoticiaPorId(id: string): Promise<Noticia | null> {
+    try {
+      const docRef = doc(this.firestore, 'noticias', id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          titulo: data['titulo'],
+          subtitulo: data['subtitulo'],
+          contenido: data['contenido'],
+          categoriaId: data['categoriaId'],
+          imagen: data['imagen'] || [],
+          autorUid: data['autorUid'],
+          fechaCreacion: data['fechaCreacion']?.toDate() || new Date(),
+          fechaActualizacion: data['fechaActualizacion']?.toDate() || new Date(),
+          estado: data['estado']
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error obteniendo noticia por ID:', error);
+      throw error;
     }
   }
 
