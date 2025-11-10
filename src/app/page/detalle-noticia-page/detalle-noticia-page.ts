@@ -19,8 +19,8 @@ import { AuthService } from '../../service/auth.service';
 export class DetalleNoticiaPage implements OnInit {
   // Inyección de servicios
   private route = inject(ActivatedRoute);
-  private firestore = inject(Firestore);
   private router = inject(Router);
+  private firestore = inject(Firestore);
   private noticiaService = inject(NoticiaService);
   private categoriasService = inject(CategoriasService);
   private authService = inject(AuthService);
@@ -78,8 +78,7 @@ export class DetalleNoticiaPage implements OnInit {
         this.error.set('ID de noticia no encontrado en la URL');
         return;
       }
-
-      // Cargar datos en paralelo
+// Cargar datos en paralelo
       const [noticia, categorias, todasLasNoticias] = await Promise.all([
         this.noticiaService.obtenerNoticiaPorId(id),
         this.categoriasService.obtenerCategorias(),
@@ -90,7 +89,6 @@ export class DetalleNoticiaPage implements OnInit {
         this.error.set('La noticia no existe o ha sido eliminada');
         return;
       }
-
       // Obtener autores necesarios (autor de la noticia actual + autores de noticias relacionadas)
       const noticiasRelacionadas = todasLasNoticias
         .filter(n => n.categoriaId === noticia.categoriaId && n.id !== noticia.id)
@@ -126,16 +124,16 @@ export class DetalleNoticiaPage implements OnInit {
   // Método helper para obtener nombre de autor
   getNombreAutor(): string {
     const autor = this.autor();
-    return autor ? ${autor.nombre} ${autor.apellido} : 'Autor desconocido';
+    return autor ? `${autor.nombre} ${autor.apellido}` : 'Autor desconocido';
   }
 
   // Métodos de compartir
   compartirFacebook(): void {
     const url = window.location.href;
     const title = this.noticiaActual()?.titulo || '';
-    window.open(https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}, '_blank');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`, '_blank');
   }
-  // Método para obtener usuarios específicos por IDs (solo autores necesarios)
+// Método para obtener usuarios específicos por IDs (solo autores necesarios)
   private async obtenerUsuariosPorIds(uids: string[]): Promise<Usuario[]> {
     try {
       const usuarios: Usuario[] = [];
@@ -158,7 +156,7 @@ export class DetalleNoticiaPage implements OnInit {
             });
           }
         } catch (error) {
-          console.warn(Error obteniendo usuario ${uid}:, error);
+          console.warn('Error obteniendo usuario ${uid}:', error);
           // Continuar con otros usuarios si uno falla
         }
       }
@@ -169,17 +167,16 @@ export class DetalleNoticiaPage implements OnInit {
       return [];
     }
   }
-
   compartirTwitter(): void {
     const url = window.location.href;
     const title = this.noticiaActual()?.titulo || '';
-    window.open(https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}, '_blank');
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank');
   }
 
   compartirWhatsApp(): void {
     const url = window.location.href;
     const title = this.noticiaActual()?.titulo || '';
-    const text = ${title} - ${url};
-    window.open(https://wa.me/?text=${encodeURIComponent(text)}, '_blank');
-  }
+    const text = `${title} - ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
 }
