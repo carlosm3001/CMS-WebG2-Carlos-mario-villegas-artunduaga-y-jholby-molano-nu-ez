@@ -5,14 +5,7 @@ import {environment} from '../environments/environment';
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-const firebaseConfig ={
-  apiKey: environment.apiKey,
-  authDomain: environment.authDomain,
-  projectId: environment.projectId,
-  storageBucket: environment.storageBucket,
-  messagingSenderId: environment.messagingSenderId,
-  appId: environment.appId
-};
+const firebaseConfig = environment.firebase;
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
